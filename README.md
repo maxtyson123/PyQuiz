@@ -1,0 +1,63 @@
+# Quiz Trainer
+Quiz Trainer is a Python application designed to help players practice and improve their quiz skills using questions from the Open Trivia Database (opentdb.com) API. It provides a user-friendly interface, allowing players to focus on gameplay rather than technical setup.
+
+## Features
+- Fetches trivia questions in real-time using the requests module.
+- Generates quizzes using a custom renderer paired with the game module.
+- Tracks player progression with stats such as time spent, accuracy, and scores. Configurable to show results after each question or at the end of the game.
+- Supports AI-controlled bots with adjustable accuracy to play alongside players.
+- Handles unexpected user input and corrupted JSON files robustly.
+- Offers extensive configuration and settings to tailor gameplay.
+- Supports local turn-based play and synchronous multiplayer over TCP.
+- Includes a GUI for accessibility alongside the default terminal interface.
+
+### Setup and run
+Please use Python 3.10 or above due to the use of match statements
+
+1. run ools/requirements.bat OR python -m pip install -r requirements.txt OR pip install -r requirements.txt
+2. run main.py
+
+### Run in Idle
+- If you want to run in idle (or other IDEs) follow these steps.
+
+1. Setup first
+2. Modify the script to change the following constants: (Maxs_Modules/renderer.py) compact_console = True, use_colour = False
+3. Run main.py with the following arguments: --ide (To do this in idle, go to Run -> Run Module Customized)
+
+- Note (CLI only) --ide tells the program to disable timed input, meaning time limits will not be enforced
+
+### Run on windows 11
+- Windows 11 doesn't like the ░ symbol in console, so it is recommended to change "divider_symbol"  (Maxs_Modules/renderer.py)
+
+### Modify Script
+- Some constants in the script can be modified to change the game's behavior
+1. game.py : max_number_of_questions = Maximum number of questions per game (shouldn't exceed 50)
+2. game.py : max_number_of_players = Maximum number of players per game (shouldn't exceed 4) (apply to bots as well)
+3. game.py : host_a_server_by_default = Should the default game be a server (True/False)
+4. renderer.py : compact_console = Use the compact variant of the console
+5. renderer.py : console_width = Width of the console
+6. renderer.py : divider_symbol = Symbol used as borders and such when printing, can be changed on compact console
+7. renderer.py : auto_htmlify = Convert text to html when printing to the GUI
+8. renderer.py : auto_colour = Convert some strings to coloured variants
+9. renderer.py : use_colour = Enable colour
+
+### Multiplayer - Local Test
+
+1. Setup first
+2. Open Tools directory
+3. Run start_server.bat or join_local_server.bat
+
+### Multiplayer - Start
+
+1. Setup first
+2. Run main.py
+3. Create a new game
+4. In the game settings menu, set Host a server to True
+5. Wait for other players to join
+6. Unless port forwarding is set up, the game will not be visible to other players on the internet
+
+### Multiplayer - Join
+
+1. Setup first
+2. Run main.py
+3. Join a game using the IP address of the host and the port
