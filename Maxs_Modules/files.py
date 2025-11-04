@@ -8,13 +8,14 @@ from Maxs_Modules.tools import try_convert, set_if_none
 # - - - - - - - Variables - - - - - - -#
 
 OFFLINE_QUESTIONS_JSON = "ProgramData/questions.json"
+USER_QUESTIONS_FOLDER = "UserData/questions/"
 DATA_FOLDER = "UserData/"
 
 
 # - - - - - - - Functions - - - - - - -#
 
 
-def load_questions_from_file() -> dict:
+def load_questions_from_file(file: str) -> dict:
     """
     Loads a json array of questions from the offline questions file specified in the offline_questions_file variable.
     This is just a downloaded JSON api response from the Open Trivia Database API.
@@ -22,7 +23,7 @@ def load_questions_from_file() -> dict:
     @return: JSON object of questions
     """
     # Open the file in read mode
-    with open(OFFLINE_QUESTIONS_JSON, "r") as file:
+    with open(file, "r") as file:
         # Read the file into a json object
         questions = json.load(file)
 

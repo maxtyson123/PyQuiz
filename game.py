@@ -5,7 +5,8 @@ import time
 import html
 import random
 
-from Maxs_Modules.files import SaveFile, load_questions_from_file, UserData
+from Maxs_Modules.files import SaveFile, load_questions_from_file, UserData, USER_QUESTIONS_FOLDER, \
+    OFFLINE_QUESTIONS_JSON
 from Maxs_Modules.network import get_ip, QuizGameServer, QuizGameClient, get_free_port
 from Maxs_Modules.tools import try_convert, set_if_none, string_bool, sort_multi_array
 from Maxs_Modules.debug import debug_message, error
@@ -386,6 +387,7 @@ class Game(SaveFile):
     quiz_difficulty = None
     question_amount = None
     question_type = None
+    question_source = None
 
     # State Settings
     current_question = None
@@ -473,6 +475,7 @@ class Game(SaveFile):
         self.quiz_difficulty = try_convert(self.save_data.get("quiz_difficulty"), str)
         self.question_amount = try_convert(self.save_data.get("question_amount"), int)
         self.question_type = try_convert(self.save_data.get("question_type"), str)
+        self.question_source = try_convert(self.save_data.get("question_source"), str)
 
         # Load State Settings
         self.current_question = try_convert(self.save_data.get("current_question"), int)
@@ -513,6 +516,7 @@ class Game(SaveFile):
         self.quiz_difficulty = set_if_none(self.quiz_difficulty, "Any")
         self.question_amount = set_if_none(self.question_amount, 10)
         self.question_type = set_if_none(self.question_type, "Any")
+        self.question_source = set_if_none(self.question_source, "OpenTriva DB")
 
         # State Settings
         self.current_question = set_if_none(self.current_question, 0)
@@ -605,9 +609,11 @@ class Game(SaveFile):
         Gets the questions from the API or from the file depending on the online_enabled setting. Afterward it converts
         the questions into Question objects and then shuffles the questions if the randomise_questions setting is True.
         Finally, it saves the questions to the file.
+
+        @todo support handling question types with ofline files
         """
         # Check if the user is online
-        if self.online_enabled:
+        if self.online_enabled and self.question_source == "OpenTriva DB":
 
             render_text("Getting questions from the internet...")
 
@@ -627,7 +633,10 @@ class Game(SaveFile):
             render_text("Loading questions from file...")
 
             # Load the question from the saved questions
-            self.questions = load_questions_from_file()
+            file = OFFLINE_QUESTIONS_JSON
+            if self.question_source != "OpenTriva DB":
+                file = USER_QUESTIONS_FOLDER + self.question_source + ".json"
+            self.questions = load_questions_from_file(file)
 
         debug_message("Questions: " + str(self.questions), "Game")
 
@@ -1300,15 +1309,35 @@ class Game(SaveFile):
                     self.settings_gameplay()
                     break
 
+    def settings_questions(self) -> str:
+        """
+        Shows a menu to configure what questions the quiz should use
+        """
+
+        # Get a list of the files in the UserData/Questions folder
+        files = os.listdir(USER_QUESTIONS_FOLDER)
+
+        question_source_menu_options = [entry.split(".")[0] for entry in files if os.path.isfile(os.path.join(USER_QUESTIONS_FOLDER, entry))]
+        question_source_menu_options.insert(0, "OpenTriva DB")
+        question_source_menu_options.append("Back")
+
+        question_source_menu = Menu("Question Source", question_source_menu_options)
+        choice = question_source_menu.get_input()
+        if choice != "Back":
+            self.question_source = choice
+        return choice
+
     def settings_gameplay(self) -> None:
         """
         Shows a menu to configure the gameplay settings for the game
+
+        @todo should move question options to a different menu for ease
         """
 
         # Menu options get updated so menu setup has to be in a loop
         while True:
             game_play_menu_options = ["Host a server", "Time limit", "Question Amount", "Category", "Difficulty",
-                                      "Type", "Show score after Question/Game",
+                                      "Type", "Question Source", "Show score after Question/Game",
                                       "Show correct answer after Question/Game", "Points for correct answer",
                                       "Points for incorrect answer", "Points for no answer",
                                       "Points multiplier for a streak",
@@ -1318,6 +1347,7 @@ class Game(SaveFile):
 
             game_play_menu_values = [str(self.host_a_server), str(self.time_limit), str(self.question_amount),
                                      str(self.quiz_category), str(self.quiz_difficulty), str(self.question_type),
+                                     str(self.question_source),
                                      str(self.show_score_after_question_or_game),
                                      str(self.show_correct_answer_after_question_or_game),
                                      str(self.points_for_correct_answer), str(self.points_for_incorrect_answer),
@@ -1362,6 +1392,9 @@ class Game(SaveFile):
                     self.question_type = gameplay_menu.get_input_option(str, "Type (Multiple, True/False)", ["Multiple",
                                                                                                              "True"
                                                                                                              "/False"])
+
+                case "Question Source":
+                    self.settings_questions()
 
                 case "Show score after Question/Game":
                     self.show_score_after_question_or_game = gameplay_menu.get_input_option(str,
